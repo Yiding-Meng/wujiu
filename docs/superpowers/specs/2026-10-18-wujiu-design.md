@@ -2,7 +2,7 @@
 
 **日期：** 2026-10-18  
 **状态：** 已批准  
-**目标平台：** Android 16 / API 36，最低 Android 8 / API 26
+**目标平台：** Android 17 / API 37，最低 Android 8 / API 26
 
 ## 1. 产品目标
 
@@ -351,7 +351,7 @@
 
 ### 8.4 手工验收
 
-- 在 API 36 模拟器验证 edge-to-edge、系统返回和字体缩放。
+- 在 API 37 模拟器验证 edge-to-edge、系统返回和字体缩放。
 - 切换系统深色模式。
 - 选择、替换、移除图片。
 - 断网状态启动与完整流程。
@@ -362,7 +362,7 @@
 - 包名：`com.mengyiding.wujiu`
 - 应用名：物久
 - 版本：`0.1.0`
-- `compileSdk = 36`，`targetSdk = 36`，`minSdk = 26`
+- `compileSdk = 37`，`targetSdk = 37`，`minSdk = 26`
 - 使用 Gradle Wrapper 固定构建版本
 - 产物输出到 `outputs/物久-v0.1.0.apk`
 - 提供中文 README，包含构建、安装、数据说明和已知限制
