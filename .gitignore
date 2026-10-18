@@ -1,5 +1,6 @@
 .gradle/
 .idea/
+.DS_Store
 local.properties
 **/build/
 .superpowers/
@@ -7,4 +8,3 @@ local.properties
 captures/
 work/
 outputs/*.apk
-
