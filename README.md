@@ -14,14 +14,16 @@
 
 ## 安装
 
-1. 将 `outputs/物久-v0.1.0.apk` 传到 Android 手机。
-2. 在文件管理器中打开 APK。
+1. 在 Android 手机上下载 [物久 v0.1.0 APK](https://github.com/Yiding-Meng/wujiu/releases/download/v0.1.0/wujiu-v0.1.0.apk)。
+2. 在文件管理器中打开下载的 APK。
 3. 如果系统提示，允许当前文件管理器「安装未知应用」。
 4. 安装后打开「物久」即可使用。
 
 系统要求：Android 8.0（API 26）或更高版本。
 
 这是使用 debug 签名构建的可安装测试版 APK，适合个人安装体验。正式上架应用商店前，应使用发布密钥重新签名。
+
+安装包 SHA-256：`d797eb8b7c6c048863af8a0eb8881d2288b3983ee3d2dd77fcc75d0b2459b5f9`
 
 ## 数据与隐私
 
