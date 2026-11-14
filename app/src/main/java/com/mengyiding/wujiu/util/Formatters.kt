@@ -12,27 +12,31 @@ private val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日", chine
 private val shortDateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd", chineseLocale)
 
 fun formatMoney(cents: Long, showDecimals: Boolean = true): String {
-    val value = BigDecimal(cents).movePointLeft(2)
+    val scale = if (showDecimals) 2 else 0
+    val value = BigDecimal(cents).movePointLeft(2).setScale(scale, RoundingMode.HALF_UP)
     val formatter = NumberFormat.getNumberInstance(chineseLocale).apply {
-        minimumFractionDigits = if (showDecimals) 2 else 0
-        maximumFractionDigits = if (showDecimals) 2 else 0
+        minimumFractionDigits = scale
+        maximumFractionDigits = scale
+        roundingMode = RoundingMode.HALF_UP
     }
     return "¥${formatter.format(value)}"
 }
 
 fun formatMoney(value: BigDecimal): String {
+    val yuan = value.movePointLeft(2).setScale(2, RoundingMode.HALF_UP)
     val formatter = NumberFormat.getNumberInstance(chineseLocale).apply {
         minimumFractionDigits = 2
         maximumFractionDigits = 2
+        roundingMode = RoundingMode.HALF_UP
     }
-    val yuan = value.setScale(2, RoundingMode.HALF_UP).movePointLeft(2)
     return "¥${formatter.format(yuan)}"
 }
 
 fun formatCompactMoney(cents: Long): String {
-    val yuan = BigDecimal(cents).movePointLeft(2)
+    val yuan = BigDecimal(cents).movePointLeft(2).setScale(0, RoundingMode.HALF_UP)
     return "¥${NumberFormat.getNumberInstance(chineseLocale).apply {
         maximumFractionDigits = 0
+        roundingMode = RoundingMode.HALF_UP
     }.format(yuan)}"
 }
 

@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [CategoryEntity::class, AssetEntity::class],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class WujiuDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
@@ -29,5 +29,11 @@ abstract class WujiuDatabase : RoomDatabase() {
                     .build()
                     .also { instance = it }
             }
+
+        internal fun createInMemory(context: Context): WujiuDatabase =
+            Room.inMemoryDatabaseBuilder(context.applicationContext, WujiuDatabase::class.java)
+                .allowMainThreadQueries()
+                .addCallback(DefaultDataCallback)
+                .build()
     }
 }

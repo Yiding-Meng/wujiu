@@ -9,7 +9,11 @@ import com.mengyiding.wujiu.data.repository.NewAsset
 import com.mengyiding.wujiu.data.repository.WujiuRepository
 import com.mengyiding.wujiu.domain.model.Asset
 import com.mengyiding.wujiu.util.todayLocalDate
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +26,7 @@ class EditorViewModel(
     private val repository: WujiuRepository,
     private val imageStore: LocalImageStore,
     savedStateHandle: SavedStateHandle,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val requestedAssetId: Long = savedStateHandle["assetId"] ?: 0L
     private val _uiState = MutableStateFlow(EditorUiState())
@@ -35,7 +40,9 @@ class EditorViewModel(
             repository.observeCategories().collect { categories ->
                 _uiState.update { state ->
                     val selected = state.categoryId
+                        ?.takeIf { id -> categories.any { it.id == id } }
                         ?: categories.firstOrNull { it.name == "其他" }?.id
+                        ?: categories.firstOrNull()?.id
                     state.copy(categories = categories, categoryId = selected)
                 }
             }
@@ -89,17 +96,13 @@ class EditorViewModel(
         val filtered = value.filter { it.isDigit() || it == '.' }
         val firstDot = filtered.indexOf('.')
         val normalized = if (firstDot < 0) {
-            filtered
+            filtered.take(12)
         } else {
-            buildString {
-                append(filtered.substring(0, firstDot))
-                append('.')
-                append(
-                    filtered.substring(firstDot + 1)
-                        .replace(".", "")
-                        .take(2),
-                )
-            }.take(15)
+            val integerPart = filtered.substring(0, firstDot).take(12)
+            val fractionPart = filtered.substring(firstDot + 1)
+                .replace(".", "")
+                .take(2)
+            "$integerPart.$fractionPart"
         }
         _uiState.update {
             it.copy(priceInput = normalized, priceError = null, isDirty = true)
@@ -125,11 +128,11 @@ class EditorViewModel(
     fun importImage(uri: Uri) {
         viewModelScope.launch {
             runCatching {
-                withContext(Dispatchers.IO) { imageStore.import(uri) }
+                withContext(ioDispatcher) { imageStore.import(uri) }
             }.onSuccess { path ->
                 val previous = _uiState.value.imagePath
-                if (previous != null && previous != originalImagePath) {
-                    imageStore.delete(previous)
+                if (previous != null && previous != originalImagePath && previous != path) {
+                    withContext(NonCancellable + ioDispatcher) { imageStore.delete(previous) }
                 }
                 _uiState.update {
                     it.copy(imagePath = path, generalError = null, isDirty = true)
@@ -144,19 +147,34 @@ class EditorViewModel(
 
     fun removeImage() {
         val previous = _uiState.value.imagePath ?: return
-        if (previous != originalImagePath) {
-            imageStore.delete(previous)
-        }
         _uiState.update {
             it.copy(imagePath = null, isDirty = true)
+        }
+        if (previous != originalImagePath) {
+            viewModelScope.launch {
+                withContext(NonCancellable + ioDispatcher) { imageStore.delete(previous) }
+            }
         }
     }
 
     fun discardAndCleanup() {
         val current = _uiState.value.imagePath
         if (current != null && current != originalImagePath) {
-            imageStore.delete(current)
+            CoroutineScope(SupervisorJob() + ioDispatcher).launch {
+                imageStore.delete(current)
+            }
         }
+    }
+
+    override fun onCleared() {
+        val state = _uiState.value
+        val current = state.imagePath
+        if (!state.isSaved && current != null && current != originalImagePath) {
+            CoroutineScope(SupervisorJob() + ioDispatcher).launch {
+                imageStore.delete(current)
+            }
+        }
+        super.onCleared()
     }
 
     fun save(onSaved: () -> Unit) {
@@ -177,14 +195,14 @@ class EditorViewModel(
         }
         val dateError = when {
             state.purchaseDateEpochDay > today -> "购买日期不能晚于今天"
-            originalAsset?.purchaseDateEpochDay != null &&
-                state.purchaseDateEpochDay > today -> "购买日期不能晚于今天"
             originalAsset?.inactiveDateEpochDay != null &&
                 state.purchaseDateEpochDay > originalAsset!!.inactiveDateEpochDay!! ->
                 "购买日期不能晚于停用日期"
             else -> null
         }
-        val categoryError = if (state.categoryId == null) "请选择分类" else null
+        val validCategorySelected = state.categoryId != null &&
+            (state.categories.isEmpty() || state.categories.any { it.id == state.categoryId })
+        val categoryError = if (!validCategorySelected) "请选择有效分类" else null
         val notesError = if (state.notes.length > 200) "备注不能超过 200 个字" else null
         if (listOf(nameError, priceError, categoryError, dateError, notesError).any { it != null }) {
             _uiState.update {
@@ -218,7 +236,7 @@ class EditorViewModel(
                 }
             }.onSuccess {
                 if (originalImagePath != null && originalImagePath != state.imagePath) {
-                    imageStore.delete(originalImagePath)
+                    withContext(NonCancellable + ioDispatcher) { imageStore.delete(originalImagePath) }
                 }
                 _uiState.update {
                     it.copy(isSaving = false, isDirty = false, isSaved = true)

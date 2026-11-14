@@ -19,6 +19,9 @@ interface AssetDao {
     @Query("SELECT * FROM assets WHERE id = :id LIMIT 1")
     fun observeOneWithCategory(id: Long): Flow<AssetWithCategoryRow?>
 
+    @Query("SELECT * FROM assets ORDER BY id ASC")
+    suspend fun listAll(): List<AssetEntity>
+
     @Query("SELECT * FROM assets WHERE id = :id LIMIT 1")
     suspend fun findById(id: Long): AssetEntity?
 
@@ -33,4 +36,7 @@ interface AssetDao {
 
     @Delete
     suspend fun delete(asset: AssetEntity)
+
+    @Query("DELETE FROM assets")
+    suspend fun deleteAll()
 }

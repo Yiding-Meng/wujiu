@@ -1,5 +1,6 @@
 package com.mengyiding.wujiu.ui.home
 
+import com.mengyiding.wujiu.data.backup.WujiuBackupData
 import com.mengyiding.wujiu.domain.model.Category
 import java.math.BigDecimal
 
@@ -23,6 +24,8 @@ data class HomeUiState(
     val activeCount: Int = 0,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+    val statusMessage: String? = null,
+    val pendingImport: WujiuBackupData? = null,
 ) {
     val filteredAssets: List<AssetCardModel>
         get() = if (selectedCategoryId == null) {

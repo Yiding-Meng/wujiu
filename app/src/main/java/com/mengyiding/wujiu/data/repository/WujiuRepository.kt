@@ -1,5 +1,7 @@
 package com.mengyiding.wujiu.data.repository
 
+import com.mengyiding.wujiu.data.backup.BackupImportResult
+import com.mengyiding.wujiu.data.backup.WujiuBackupData
 import com.mengyiding.wujiu.domain.model.Asset
 import com.mengyiding.wujiu.domain.model.AssetWithCategory
 import com.mengyiding.wujiu.domain.model.Category
@@ -17,6 +19,8 @@ interface WujiuRepository {
     suspend fun setInactive(id: Long, inactiveEpochDay: Long?)
     suspend fun deleteAsset(id: Long)
     suspend fun addCategory(name: String): Long
+    suspend fun exportBackup(): WujiuBackupData
+    suspend fun importBackup(backup: WujiuBackupData, replaceExisting: Boolean = false): BackupImportResult
 }
 
 data class NewAsset(

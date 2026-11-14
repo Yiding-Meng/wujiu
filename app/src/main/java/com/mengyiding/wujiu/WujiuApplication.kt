@@ -11,6 +11,9 @@ class WujiuApplication : Application() {
 
     val repository: WujiuRepository by lazy {
         val database = WujiuDatabase.getInstance(this)
-        RoomWujiuRepository(database.categoryDao(), database.assetDao())
+        RoomWujiuRepository(
+            database = database,
+            onDeleteImage = imageStore::delete,
+        )
     }
 }

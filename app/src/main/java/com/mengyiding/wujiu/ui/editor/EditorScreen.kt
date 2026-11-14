@@ -1,5 +1,6 @@
 package com.mengyiding.wujiu.ui.editor
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -99,6 +100,10 @@ fun EditorScreen(
 
     fun requestBack() {
         if (state.isDirty) showDiscardDialog = true else onBack()
+    }
+
+    BackHandler(enabled = state.isDirty && !state.isSaving) {
+        showDiscardDialog = true
     }
 
     Scaffold(
